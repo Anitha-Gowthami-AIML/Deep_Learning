@@ -14,6 +14,9 @@ import warnings
 warnings.filterwarnings('ignore')
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+# Resolve all file paths relative to this script's location (required for Streamlit Cloud)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Page configuration
 st.set_page_config(
     page_title="🎵 Spotify Hit Prediction",
@@ -24,8 +27,8 @@ st.set_page_config(
 
 # Custom CSS for background and styling
 def add_bg_and_logo():
-    bg_image = "musical_bg.jpg"
-    logo_image = "spotify_logo1.jpg"
+    bg_image = os.path.join(BASE_DIR, "musical_bg.jpg")
+    logo_image = os.path.join(BASE_DIR, "spotify_logo1.jpg")
 
     if os.path.exists(bg_image):
         with open(bg_image, "rb") as f:
@@ -281,24 +284,24 @@ def load_models():
                      'XGBoost', 'LightGBM', 'SVM', 'KNN']
     for name in ml_model_names:
         try:
-            with open(f'models/ml_{name}.pkl', 'rb') as f:
+            with open(os.path.join(BASE_DIR, f'models/ml_{name}.pkl'), 'rb') as f:
                 models[name.replace('_', ' ')] = pickle.load(f)
         except Exception as e:
             st.warning(f"Could not load {name}")
 
     # Load preprocessors
-    with open('models/scaler.pkl', 'rb') as f:
+    with open(os.path.join(BASE_DIR, 'models/scaler.pkl'), 'rb') as f:
         scaler = pickle.load(f)
-    with open('models/features.pkl', 'rb') as f:
+    with open(os.path.join(BASE_DIR, 'models/features.pkl'), 'rb') as f:
         features = pickle.load(f)
-    with open('models/encoders.pkl', 'rb') as f:
+    with open(os.path.join(BASE_DIR, 'models/encoders.pkl'), 'rb') as f:
         encoders = pickle.load(f)
 
     return models, scaler, features, encoders
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv('data/spotify_songs.csv')
+    df = pd.read_csv(os.path.join(BASE_DIR, 'data/spotify_songs.csv'))
     return df
 
 # Load everything
