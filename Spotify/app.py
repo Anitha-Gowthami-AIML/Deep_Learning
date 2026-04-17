@@ -426,75 +426,75 @@ with tab1:
             'indie': 'indie', 'alternative': 'alternative',
         }
         def fetch_spotify_track(genre, mood="popular"):
-        if not SPOTIFY_AVAILABLE:
+            if not SPOTIFY_AVAILABLE:
+                return None
+            
+            try:
+                client_id = st.secrets.get("SPOTIFY_CLIENT_ID")
+                client_secret = st.secrets.get("SPOTIFY_CLIENT_SECRET")
+            
+                if not client_id or not client_secret:
+                    return None
+            
+                auth_manager = SpotifyClientCredentials(
+                    client_id=client_id,
+                    client_secret=client_secret
+                )
+                sp = spotipy.Spotify(auth_manager=auth_manager)
+            
+                # 🔥 FIX 1: Use genre filter properly
+                query = f"genre:{genre}"
+            
+                results = sp.search(
+                    q=query,
+                    type="track",
+                    limit=50  # larger pool
+                )
+            
+                tracks = results["tracks"]["items"]
+            
+                if not tracks:
+                    return None
+            
+                # 🔥 FIX 2: Filter by mood (post-filtering)
+                filtered_tracks = []
+            
+                for t in tracks:
+                    name = t["name"].lower()
+                    artist = " ".join([a["name"].lower() for a in t["artists"]])
+            
+                    text = name + " " + artist
+            
+                    if mood == "high energy dance":
+                        if any(k in text for k in ["dance", "remix", "party"]):
+                            filtered_tracks.append(t)
+            
+                    elif mood == "chill acoustic":
+                        if any(k in text for k in ["acoustic", "piano", "chill"]):
+                            filtered_tracks.append(t)
+            
+                    else:
+                        filtered_tracks.append(t)
+            
+                # fallback if filtering too strict
+                if not filtered_tracks:
+                    filtered_tracks = tracks
+            
+                import random
+                t = random.choice(filtered_tracks)
+            
+                return {
+                    "name": t["name"],
+                    "artist": ", ".join([a["name"] for a in t["artists"]]),
+                    "preview": t["preview_url"],
+                    "image": t["album"]["images"][0]["url"] if t["album"]["images"] else None,
+                    "url": t["external_urls"]["spotify"]
+                }
+            
+            except Exception as e:
+                print("Spotify error:", e)
+            
             return None
-        
-        try:
-            client_id = st.secrets.get("SPOTIFY_CLIENT_ID")
-            client_secret = st.secrets.get("SPOTIFY_CLIENT_SECRET")
-        
-            if not client_id or not client_secret:
-                return None
-        
-            auth_manager = SpotifyClientCredentials(
-                client_id=client_id,
-                client_secret=client_secret
-            )
-            sp = spotipy.Spotify(auth_manager=auth_manager)
-        
-            # 🔥 FIX 1: Use genre filter properly
-            query = f"genre:{genre}"
-        
-            results = sp.search(
-                q=query,
-                type="track",
-                limit=50  # larger pool
-            )
-        
-            tracks = results["tracks"]["items"]
-        
-            if not tracks:
-                return None
-        
-            # 🔥 FIX 2: Filter by mood (post-filtering)
-            filtered_tracks = []
-        
-            for t in tracks:
-                name = t["name"].lower()
-                artist = " ".join([a["name"].lower() for a in t["artists"]])
-        
-                text = name + " " + artist
-        
-                if mood == "high energy dance":
-                    if any(k in text for k in ["dance", "remix", "party"]):
-                        filtered_tracks.append(t)
-        
-                elif mood == "chill acoustic":
-                    if any(k in text for k in ["acoustic", "piano", "chill"]):
-                        filtered_tracks.append(t)
-        
-                else:
-                    filtered_tracks.append(t)
-        
-            # fallback if filtering too strict
-            if not filtered_tracks:
-                filtered_tracks = tracks
-        
-            import random
-            t = random.choice(filtered_tracks)
-        
-            return {
-                "name": t["name"],
-                "artist": ", ".join([a["name"] for a in t["artists"]]),
-                "preview": t["preview_url"],
-                "image": t["album"]["images"][0]["url"] if t["album"]["images"] else None,
-                "url": t["external_urls"]["spotify"]
-            }
-        
-        except Exception as e:
-            print("Spotify error:", e)
-        
-        return None
     
         # ── End Audio Section ──────────────────────────────────────────────
 
