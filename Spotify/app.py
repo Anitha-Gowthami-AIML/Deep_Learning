@@ -425,77 +425,65 @@ with tab1:
             'reggae': 'reggae', 'folk': 'folk', 'latin': 'latin',
             'indie': 'indie', 'alternative': 'alternative',
         }
-        def fetch_spotify_track(genre, mood="popular"):
-            if not SPOTIFY_AVAILABLE:
-                return None
-            
+
+        def fetch_jamendo_track(genre_str, tempo, acousticness):
+            import urllib.request, json, random
+            tag = GENRE_TAG_MAP.get(genre_str.lower().strip(), genre_str.lower().strip())
+            if tempo < 80:    speed = 'very_low'
+            elif tempo < 110: speed = 'low'
+            elif tempo < 140: speed = 'medium'
+            elif tempo < 170: speed = 'high'
+            else:             speed = 'very_high'
+            params = {
+                "client_id": "b6747d04", "format": "json", "limit": "10",
+                "tags": tag, "audioformat": "mp32", "boost": "popularity_total",
+                "imagesize": "300", "speed": speed,
+            }
+            if acousticness > 0.6:
+                params["acousticelectric"] = "acoustic"
+            elif acousticness < 0.3:
+                params["acousticelectric"] = "electric"
+            query = "&".join(f"{k}={v}" for k, v in params.items())
             try:
-                client_id = st.secrets.get("SPOTIFY_CLIENT_ID")
-                client_secret = st.secrets.get("SPOTIFY_CLIENT_SECRET")
-            
-                if not client_id or not client_secret:
-                    return None
-            
-                auth_manager = SpotifyClientCredentials(
-                    client_id=client_id,
-                    client_secret=client_secret
+                with urllib.request.urlopen(
+                    f"https://api.jamendo.com/v3.0/tracks/?{query}", timeout=8
+                ) as resp:
+                    results = json.loads(resp.read().decode()).get("results", [])
+                if results:
+                    t = random.choice(results)
+                    return {
+                        "name":   t.get("name", "Unknown"),
+                        "artist": t.get("artist_name", "Unknown"),
+                        "audio":  t.get("audio", ""),
+                        "image":  t.get("image", ""),
+                        "url":    t.get("shareurl", ""),
+                    }
+            except Exception:
+                return None
+
+        with st.spinner("🔍 Finding a matching track for your song profile..."):
+            track = fetch_jamendo_track(genre, tempo, acousticness)
+
+        if track and track["audio"]:
+            tcol1, tcol2 = st.columns([1, 3])
+            with tcol1:
+                if track["image"]:
+                    st.image(track["image"], width=150)
+            with tcol2:
+                st.markdown(f"**🎵 {track['name']}**")
+                st.markdown(f"👤 *{track['artist']}*")
+                st.markdown(
+                    f"<small>Genre: <code>{genre}</code> &nbsp;·&nbsp; "
+                    f"Tempo: <code>{tempo:.0f} BPM</code> &nbsp;·&nbsp; "
+                    f"Energy: <code>{energy:.2f}</code> &nbsp;·&nbsp; "
+                    f"Danceability: <code>{danceability:.2f}</code></small>",
+                    unsafe_allow_html=True,
                 )
-                sp = spotipy.Spotify(auth_manager=auth_manager)
-            
-                # 🔥 FIX 1: Use genre filter properly
-                query = f"genre:{genre}"
-            
-                results = sp.search(
-                    q=query,
-                    type="track",
-                    limit=50  # larger pool
-                )
-            
-                tracks = results["tracks"]["items"]
-            
-                if not tracks:
-                    return None
-            
-                # 🔥 FIX 2: Filter by mood (post-filtering)
-                filtered_tracks = []
-            
-                for t in tracks:
-                    name = t["name"].lower()
-                    artist = " ".join([a["name"].lower() for a in t["artists"]])
-            
-                    text = name + " " + artist
-            
-                    if mood == "high energy dance":
-                        if any(k in text for k in ["dance", "remix", "party"]):
-                            filtered_tracks.append(t)
-            
-                    elif mood == "chill acoustic":
-                        if any(k in text for k in ["acoustic", "piano", "chill"]):
-                            filtered_tracks.append(t)
-            
-                    else:
-                        filtered_tracks.append(t)
-            
-                # fallback if filtering too strict
-                if not filtered_tracks:
-                    filtered_tracks = tracks
-            
-                import random
-                t = random.choice(filtered_tracks)
-            
-                return {
-                    "name": t["name"],
-                    "artist": ", ".join([a["name"] for a in t["artists"]]),
-                    "preview": t["preview_url"],
-                    "image": t["album"]["images"][0]["url"] if t["album"]["images"] else None,
-                    "url": t["external_urls"]["spotify"]
-                }
-            
-            except Exception as e:
-                print("Spotify error:", e)
-            
-            return None
-    
+                st.audio(track["audio"], format="audio/mp3")
+                st.markdown(f"[🔗 Open on Jamendo]({track['url']})", unsafe_allow_html=True)
+            st.caption("🎼 Royalty-free tracks from Jamendo · works on Streamlit Cloud · no extra dependencies")
+        else:
+            st.info(f"⚠️ No matching track found for genre **{genre}**. Try a different genre or adjust tempo / acousticness.")
         # ── End Audio Section ──────────────────────────────────────────────
 
 with tab2:
