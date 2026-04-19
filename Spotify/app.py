@@ -1,32 +1,4 @@
-"""
-Spotify Hit Prediction — Streamlit App
-======================================
-Fixes applied vs original:
-  1. BAD MESSAGE FORMAT (ROOT CAUSE):
-       • Original code reused variable names col1/col2 in 3 separate places
-         inside the same tab scope. On button-click rerun, Streamlit's element
-         tree differed from the initial render → ForwardMsg protobuf mismatch
-         → "Bad Message Format" alert.
-       • Fix: every column group has a unique name (input_col1/input_col2,
-         res_col1/res_col2, ov_col1/ov_col2/ov_col3) so the element tree is
-         always consistent across reruns.
-  2. RESULTS DISAPPEAR ON WIDGET INTERACTION:
-       • Original rendered results INSIDE the `if st.button` block, so they
-         vanished the moment any slider moved (triggering a rerun).
-       • Fix: store everything in st.session_state on button-click; display
-         results outside the button block so they persist.
-  3. SESSION STATE NOT INITIALISED:
-       • Accessing session_state keys before they exist raises errors.
-       • Fix: all keys initialised at top of script before any widget.
-  4. st.audio() with URL:
-       • Works fine in Streamlit ≥ 1.28 (URL is set directly on proto.url).
-       • We still prefer the HTML <audio> fallback to avoid any edge-case
-         issues with CORS or network restrictions on the Jamendo CDN.
-  5. NaN / Inf in model probability → protobuf can't encode → Bad Message Format
-       • Fix: clip + isfinite guard on every ML prediction.
-  6. Large background image pumped through WebSocket:
-       • Fix: resize + quality-reduce before base64 encoding.
-"""
+# Spotify Hit Prediction — Streamlit App
 
 import streamlit as st
 import pandas as pd
