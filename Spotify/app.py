@@ -255,7 +255,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # ════════════════════════════════════════════════════════════════════════════
 with tab1:
     st.header("🎯 Song Hit Prediction")
-    st.caption("💡 **Demo tip:** defaults below match a typical chart-topper — just press **Predict**!")
+    st.caption("💡 **tip:** defaults below match a typical chart-topper — just press **Predict**!")
 
     # ── Input widgets ──────────────────────────────────────────────────────
     input_col1, input_col2 = st.columns(2)          # ← unique name
