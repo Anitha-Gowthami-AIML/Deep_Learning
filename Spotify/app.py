@@ -781,29 +781,63 @@ with tab5:
     )
 
     st.subheader("Radar Chart")
-    cats   = ["Accuracy","F1-Score","AUC"]
-    colors = ["#1DB954","#FF6B6B","#4ECDC4","#FFD700","#FF8C00"]
-    fig5   = go.Figure()
-    for (m,res), col in zip(ann5.items(), colors):
-        vals = [res["accuracy"], res["f1"], res["auc"], res["accuracy"]]
-        fig5.add_trace(go.Scatterpolar(
-            r=vals, theta=cats+[cats[0]], fill="toself", name=m,
-            line=dict(color=col, width=2),
-        ))
-    fig5.update_layout(
-        polar=dict(
-            bgcolor="#161b22",
-            radialaxis=dict(visible=True, range=[0.62,0.83],
-                            tickfont=dict(color="#FFFFFF"),
-                            gridcolor="#333", color="#CCCCCC"),
-            angularaxis=dict(tickfont=dict(color="#FFFFFF", size=12)),
+    
+cats = ["Accuracy","F1-Score","AUC"]
+
+def hex_to_rgba(hex_color, alpha=0.15):
+    hex_color = hex_color.lstrip("#")
+    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    return f"rgba({r},{g},{b},{alpha})"
+
+colors = ["#1DB954","#FF6B6B","#4ECDC4","#FFD700","#FF8C00"]
+dashes = ["solid","dot","dash","longdash","dashdot"]
+
+fig5 = go.Figure()
+
+for (m_name, res), col, dash in zip(ann5.items(), colors, dashes):
+    epsilon = np.random.uniform(-0.002, 0.002)
+
+    vals = [
+        res["accuracy"] + epsilon,
+        res["f1"] + epsilon,
+        res["auc"] + epsilon,
+        res["accuracy"] + epsilon
+    ]
+
+    fig5.add_trace(go.Scatterpolar(
+        r=vals,
+        theta=cats + [cats[0]],
+        fill="toself",
+        name=m_name,
+        mode="lines+markers",
+        marker=dict(size=6),
+        line=dict(color=col, width=2, dash=dash),
+        fillcolor=hex_to_rgba(col, 0.15),
+    ))
+
+fig5.update_layout(
+    polar=dict(
+        bgcolor="#161b22",
+        radialaxis=dict(
+            visible=True,
+            range=[0.5, 0.9],
+            color="#CCCCCC",
+            gridcolor="#333"
         ),
-        plot_bgcolor="#0d1117", paper_bgcolor="#0d1117",
-        font=dict(color="#FFFFFF", size=11), height=440,
-        legend=dict(bgcolor="#1a1a2e", bordercolor="#444",
-                    font=dict(color="#FFFFFF")),
-    )
-    st.plotly_chart(fig5, use_container_width=True)
+        angularaxis=dict(color="#FFFFFF"),
+    ),
+    plot_bgcolor="#0d1117",
+    paper_bgcolor="#0d1117",
+    font=dict(color="#FFFFFF", size=11),
+    height=440,
+    legend=dict(
+        bgcolor="#161b22",
+        bordercolor="#444",
+        font=dict(color="#FFFFFF")
+    ),
+)
+
+st.plotly_chart(fig5, use_container_width=True)
 
     st.subheader("Key Insights")
     for m, (icon, txt) in {
