@@ -357,7 +357,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # ═════════════════════════════════════════════════════════════════════════════
 with tab1:
     st.header("🎯 Song Hit Prediction")
-    st.caption("💡 **Demo:** Defaults are pre-tuned for a pop hit — just press **Predict Hit Probability** below!")
+    st.caption("💡 **Tip:** Defaults are pre-tuned for a pop hit — just press **Predict Hit Probability** below!")
 
     # INPUT COLUMNS — named input_c1, input_c2 (unique)
     input_c1, input_c2 = st.columns(2)
