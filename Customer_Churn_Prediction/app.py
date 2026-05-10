@@ -119,10 +119,14 @@ def _dark_fig(*args, **kwargs):
 # CACHED LOADERS
 # ══════════════════════════════════════════════════════════════════════════
 @st.cache_data
+@st.cache_data
 def load_raw_data():
-    if not os.path.exists(DATA_FILE):
+    file_path = os.path.join(os.path.dirname(__file__), DATA_FILE)
+
+    if not os.path.exists(file_path):
         return None
-    return pd.read_csv(DATA_FILE)
+
+    return pd.read_csv(file_path)
 
 @st.cache_data
 def preprocess_data(df_raw):
